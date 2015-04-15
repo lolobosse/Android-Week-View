@@ -113,6 +113,11 @@ public class WeekView extends View {
     private DateTimeInterpreter mDateTimeInterpreter;
     private ScrollListener mScrollListener;
 
+    /**
+     * This defines the minimum height (in minutes for an appointment).
+     */
+    private static final int MIN_HEIGHT = 10;
+
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
         @Override
@@ -554,6 +559,17 @@ public class WeekView extends View {
                     // Calculate bottom.
                     float bottom = mEventRects.get(i).bottom;
                     bottom = mHourHeight * 24 * bottom / 1440 + mCurrentOrigin.y + mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2 - mEventMarginVertical;
+
+                    if ((bottom - top) < (mHourHeight/(60/MIN_HEIGHT))){
+                        // The appmt is too small, we need to fake its drawing
+                        float height = bottom - top;
+                        float middlePoint = top+(height/2);
+                        // The idea is to take the middle point and to redefine the top and the height relatively to it and to the wanted height
+                        top = (float) (middlePoint - ((mHourHeight/(60/MIN_HEIGHT))*0.5));
+                        bottom = (float) (middlePoint + ((mHourHeight/(60/MIN_HEIGHT))*0.5));
+                        // #originalTop is used to set the start point of the text
+                        originalTop = top;
+                    }
 
                     // Calculate left and right.
                     float left = startFromPixel + mEventRects.get(i).left * mWidthPerDay;
