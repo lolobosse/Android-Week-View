@@ -16,6 +16,7 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.HapticFeedbackConstants;
@@ -116,7 +117,7 @@ public class WeekView extends View {
     /**
      * This defines the minimum height (in minutes for an appointment).
      */
-    private static final int MIN_HEIGHT = 10;
+    private int MIN_HEIGHT = 1;
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
@@ -259,6 +260,7 @@ public class WeekView extends View {
             mOverlappingEventGap = a.getDimensionPixelSize(R.styleable.WeekView_overlappingEventGap, mOverlappingEventGap);
             mEventMarginVertical = a.getDimensionPixelSize(R.styleable.WeekView_eventMarginVertical, mEventMarginVertical);
             mXScrollingSpeed = a.getFloat(R.styleable.WeekView_xScrollingSpeed, mXScrollingSpeed);
+            MIN_HEIGHT = a.getInt(R.styleable.WeekView_eventMinDurationRepresentation, MIN_HEIGHT);
         } finally {
             a.recycle();
         }
@@ -553,22 +555,46 @@ public class WeekView extends View {
                     // Calculate top.
                     float top = mHourHeight * 24 * mEventRects.get(i).top / 1440 + mCurrentOrigin.y + mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2 + mEventMarginVertical;
                     float originalTop = top;
-                    if (top < mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2)
-                        top = mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2;
+//                    if (top < mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2)
+//                        top = mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2;
 
                     // Calculate bottom.
                     float bottom = mEventRects.get(i).bottom;
                     bottom = mHourHeight * 24 * bottom / 1440 + mCurrentOrigin.y + mHeaderTextHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom + mTimeTextHeight/2 - mEventMarginVertical;
 
-                    if ((bottom - top) < (mHourHeight/(60/MIN_HEIGHT))){
-                        // The appmt is too small, we need to fake its drawing
-                        float height = bottom - top;
-                        float middlePoint = top+(height/2);
-                        // The idea is to take the middle point and to redefine the top and the height relatively to it and to the wanted height
-                        top = (float) (middlePoint - ((mHourHeight/(60/MIN_HEIGHT))*0.5));
-                        bottom = (float) (middlePoint + ((mHourHeight/(60/MIN_HEIGHT))*0.5));
-                        // #originalTop is used to set the start point of the text
-                        originalTop = top;
+                    boolean isTop = false;
+                    boolean isBottom = false;
+
+                    int mMinimumHeight = (int) (mHourHeight / (60f / MIN_HEIGHT));
+                    float height = bottom - top;
+
+                    if (mEventRects.get(i).top<MIN_HEIGHT){
+                        // Is at the top
+                        isTop = true;
+                    }
+                    if (mEventRects.get(i).bottom>1440-MIN_HEIGHT){
+                        // Is at the bottom
+                        isBottom = true;
+                    }
+
+                    if (height < mMinimumHeight) {
+                        if (!isBottom && !isTop) {
+                            //The appmt is too small, we need to fake its drawing
+                            float middlePoint = top + (height / 2);
+                            // The idea is to take the middle point and to redefine the top and the height relatively to it and to the wanted height
+                            top = (float) (middlePoint - (mMinimumHeight * 0.5));
+                            bottom = (float) (middlePoint + (mMinimumHeight * 0.5));
+                            // #originalTop is used to set the start point of the text
+                            originalTop = top;
+                        } else if (!isBottom && isTop) {
+                            bottom = top + mMinimumHeight;
+                            originalTop = top;
+                        } else if (!isTop && isBottom){
+                            // This 20 is just to compensate the fact that the bottom
+                            // could be overridden by the black bar (the android one)
+                            top = bottom - mMinimumHeight-20;
+                            originalTop = top;
+                        }
                     }
 
                     // Calculate left and right.
