@@ -11,6 +11,7 @@ import android.widget.Toast;
 import com.alamkanak.weekview.DateTimeInterpreter;
 import com.alamkanak.weekview.WeekView;
 import com.alamkanak.weekview.WeekViewEvent;
+import com.alamkanak.weekview.calendar.CalendarReader;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -148,11 +149,11 @@ public class MainActivity extends ActionBarActivity implements WeekView.MonthCha
         Calendar startTime = Calendar.getInstance();
         startTime.set(Calendar.HOUR_OF_DAY, 3);
         startTime.set(Calendar.MINUTE, 0);
-        startTime.set(Calendar.MONTH, newMonth-1);
+        startTime.set(Calendar.MONTH, newMonth - 1);
         startTime.set(Calendar.YEAR, newYear);
         Calendar endTime = (Calendar) startTime.clone();
         endTime.add(Calendar.HOUR, 1);
-        endTime.set(Calendar.MONTH, newMonth-1);
+        endTime.set(Calendar.MONTH, newMonth - 1);
         WeekViewEvent event = new WeekViewEvent(1, getEventTitle(startTime), startTime, endTime);
         event.setColor(getResources().getColor(R.color.event_color_01));
         events.add(event);
@@ -243,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements WeekView.MonthCha
         event.setColor(getResources().getColor(R.color.event_color_02));
         events.add(event);
 
-        return events;
+        return (List<WeekViewEvent>) CalendarReader.getAllEvents(this, newYear, newMonth);
     }
 
     private String getEventTitle(Calendar time) {
