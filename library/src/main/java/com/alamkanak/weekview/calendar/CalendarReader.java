@@ -3,6 +3,7 @@ package com.alamkanak.weekview.calendar;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.provider.CalendarContract;
 import android.util.Log;
 
 import com.alamkanak.weekview.WeekViewEvent;
@@ -30,17 +31,20 @@ public class CalendarReader {
         // Takes all the events available
 
         String[] arrayProperties = new String[]{"calendar_id", "title", "description",
-                "dtstart", "dtend", "eventLocation", "isOrganizer", "uid2445", "eventStatus", "organizer", "allDay", "availability", "eventTimezone", "calendar_id"};
+                "dtstart", "dtend", "eventLocation", "isOrganizer", "uid2445", "eventStatus", "organizer", "allDay", "availability", "eventTimezone"};
 
         Cursor cursor = context.getContentResolver()
                 .query(
                         Uri.parse("content://com.android.calendar/events"),
                         arrayProperties, null,
                         null, null);
+        ArrayList<WeekViewEvent> list = new ArrayList<>();
         Log.e("Calendar Reader", "--------------------------NEW Session " + Calendar.getInstance().getTime().toString() + "--------------------------");
         while (cursor.moveToNext()) {
-            if (cursor.getPosition() > 480 && cursor.getPosition() < 500) {
-                Log.d("CalendarReader", "cursor.getPosition():" + cursor.getPosition());
+            //  Log.d("CalendarReader", "cursor.getPosition():" + cursor.getPosition());
+            Calendar startTime = convertTimeInHumanReadable(cursor.getString(3), cursor.getString(12));
+            Calendar endTime = convertTimeInHumanReadable(cursor.getString(4), cursor.getString(12));
+            if (endTime == null || startTime == null) {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < arrayProperties.length; i++) {
                     if (i == 3 || i == 4) {
@@ -48,12 +52,43 @@ public class CalendarReader {
                     } else {
                         sb.append(arrayProperties[i] + " = " + cursor.getString(i) + "\n");
                     }
+                    sb.append("\n\n");
+//                    Log.e("CalendarReader", sb.toString());
                 }
-                sb.append("\n\n");
-                Log.d("CalendarReader", sb.toString());
+            } else {
+                Calendar startCalendar = Calendar.getInstance();
+                startCalendar.set(year, month - 1, 1, 0, 0, 0);
+                Calendar endCalendar = Calendar.getInstance();
+                endCalendar.set(year, month - 1, 1, 0, 0, 0);
+                endCalendar.set(Calendar.DAY_OF_MONTH, endCalendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//                Log.d("CalendarReader", "startCalendar.get(Calendar.MONTH):" + startCalendar.get(Calendar.MONTH));
+//                Log.d("CalendarReader", "startCalendar.get(Calendar.DAY_OF_MONTH):" + startCalendar.get(Calendar.DAY_OF_MONTH));
+//                Log.d("CalendarReader", "endCalendar.get(Calendar.MONTH):" + endCalendar.get(Calendar.MONTH));
+//                Log.d("CalendarReader", "endCalendar.get(Calendar.DAY_OF_MONTH):" + endCalendar.get(Calendar.DAY_OF_MONTH));
+                if (startTime.after(startCalendar) && endTime.before(endCalendar)) {
+                    WeekViewEvent event = new WeekViewEvent(cursor.getPosition(), cursor.getString(1), startTime, endTime);
+                    list.add(event);
+                }
             }
         }
-        return new ArrayList<>();
+        // TODO: See howto make it compatible with API <9
+        String[] calendarProperties = {CalendarContract.Calendars.NAME, CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL};
+
+        Cursor calendarCursor = context.getContentResolver()
+                .query(
+                        CalendarContract.Calendars.CONTENT_URI,
+                        calendarProperties, null,
+                        null, null);
+
+        while (calendarCursor.moveToNext()) {
+            for (int i = 0; i < calendarProperties.length; i++) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(calendarProperties[i] + " = " + calendarCursor.getString(i));
+                Log.d("CalendarReader", sb.toString() + "\n");
+            }
+        }
+        return list;
+
     }
 
     /**
@@ -66,11 +101,17 @@ public class CalendarReader {
         return;
     }
 
-    private static String convertTimeInHumanReadable(String Slong, String timeZone) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeZone(TimeZone.getTimeZone(timeZone));
-        calendar.setTimeInMillis(Long.parseLong(Slong));
-        return calendar.getTime().toString();
+    private static Calendar convertTimeInHumanReadable(String Slong, String timeZone) {
+        if ((Slong == null)) {
+            return null;
+        } else {
+            Calendar calendar = Calendar.getInstance();
+            if (timeZone != null) {
+                calendar.setTimeZone(TimeZone.getTimeZone(timeZone));
+            }
+            calendar.setTimeInMillis(Long.parseLong(Slong));
+            return calendar;
+        }
     }
 
     // TODO Select the interesting calendar and try to filter dumm events if possible like the number of the weeks
