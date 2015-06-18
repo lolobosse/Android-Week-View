@@ -21,4 +21,7 @@
             android:orderInCategory="100"
             app:showAsAction="ifRoom"/>
     </group>
+    <item android:id="@+id/loadCalendar"
+        android:title="Load Calendar">
+    </item>
 </menu>
