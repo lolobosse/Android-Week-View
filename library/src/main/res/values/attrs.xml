@@ -34,5 +34,12 @@
         <attr name="overlappingEventGap" format="dimension"/>
         <attr name="eventMarginVertical" format="dimension"/>
         <attr name="xScrollingSpeed" format="float"/>
+
+        <!-- All Day Event Attrs -->
+        <attr name="enableAllDayEvent" format="boolean"/>
+        <attr name="maxNumberOfAllDayEventsPerDay" format="integer"/>
+        <attr name="heightPerAllDayElement" format="dimension"/>
+        <attr name="allDaySeparatorHeight" format="dimension"/>
+        <attr name="allDaySeparatorColor" format="dimension"/>
     </declare-styleable>
 </resources>

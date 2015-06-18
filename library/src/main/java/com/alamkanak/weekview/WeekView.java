@@ -103,6 +103,11 @@ public class WeekView extends View {
     private Calendar mLastVisibleDay;
     private Calendar mScrollToDay = null;
     private double mScrollToHour = -1;
+    private boolean mIsAllDayEnabled = true;
+    private int mNumberOfAllDayEvents = 2;
+    private int mHeightAllDayEvent = 30;
+    private int mAllDaySeparatorHeight = 5;
+    private int mAllDaySeparatorColor = Color.RED;
 
     // Listeners.
     private EventClickListener mEventClickListener;
@@ -254,6 +259,11 @@ public class WeekView extends View {
             mOverlappingEventGap = a.getDimensionPixelSize(R.styleable.WeekView_overlappingEventGap, mOverlappingEventGap);
             mEventMarginVertical = a.getDimensionPixelSize(R.styleable.WeekView_eventMarginVertical, mEventMarginVertical);
             mXScrollingSpeed = a.getFloat(R.styleable.WeekView_xScrollingSpeed, mXScrollingSpeed);
+            mIsAllDayEnabled = a.getBoolean(R.styleable.WeekView_enableAllDayEvent, mIsAllDayEnabled);
+            mNumberOfAllDayEvents = a.getInt(R.styleable.WeekView_maxNumberOfAllDayEventsPerDay, mNumberOfAllDayEvents);
+            mHeightAllDayEvent = a.getInt(R.styleable.WeekView_heightPerAllDayElement, mHeightAllDayEvent);
+            mAllDaySeparatorHeight = a.getInt(R.styleable.WeekView_allDaySeparatorHeight, mAllDaySeparatorHeight);
+            mAllDaySeparatorColor = a.getColor(R.styleable.WeekView_allDaySeparatorColor, mAllDaySeparatorColor);
         } finally {
             a.recycle();
         }
